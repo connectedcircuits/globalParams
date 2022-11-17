@@ -1,0 +1,42 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+trigger:
+- master
+
+pool:
+  vmImage: windows-latest
+
+variables:
+  globleParamFile: 'globalParameters-sit.json'
+  logicAppOneParamFile: 'LogicAppOne\LogicApp.parameters.json'
+  logicAppTwoParamFile: 'LogicAppTwo\LogicApp.parameters.json'
+
+  nonProdAzureServiceConnection: '<add your devops service connection>'
+  primaryLocation: 'australiaeast'
+
+  sitResourceGroup: 'rg-parmerge-sit'
+  sitSubscriptionId: '<add your Azure subscription Id>'
+ 
+
+steps:
+- checkout: self
+
+- template: Templates\merge-parameter-files.yml
+  parameters:
+    paramFileList:
+      - ${{ variables.logicAppOneParamFile }}
+      - ${{ variables.logicAppTwoParamFile }}
+    globalParamFile: ${{ variables.globleParamFile }}
+      
+- template: Templates\deploy-logicapp-projects.yml
+  parameters:   
+    location: ${{ variables.primaryLocation }}
+    resourceGroup: ${{ variables.sitResourceGroup }}
+    subscriptionId: ${{ variables.sitSubscriptionId }}
+    serviceConnectionName: ${{ variables.nonProdAzureServiceConnection }}
+    deployMode: 'Incremental'
+    projectList:
+      - 'LogicAppOne'
+      - 'LogicAppTwo'

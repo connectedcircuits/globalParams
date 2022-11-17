@@ -1,0 +1,16 @@
+parameters:
+  - name: paramFileList 
+    displayName: "List of the full path to the parameter files for merging."
+    type: object
+    default: []
+  - name: globalParamFile
+    displayName: "Full path and name to the global parameter file."
+    type: string
+
+
+# For each parameter file in the list
+steps:
+  - ${{ each param in parameters.paramFileList }}:
+    - powershell: Deploy/PSScripts/mergeParameters.ps1 ${{ parameters.globalParamFile }} ${{ param }} 
+      displayName: 'Merged ${{ param }} file' 
+      workingDirectory: $(build.sourcesDirectory)

@@ -1,0 +1,44 @@
+# This pipeline template deploys a list of logic apps with the matching parameter file for the specified enviroment.
+parameters:
+  - name: projectList 
+    displayName: "List of Logic App projects"
+    type: object
+    default: []
+  - name: serviceConnectionName
+    displayName: "Name of the service connection"
+    type: string
+  - name: subscriptionId
+    type: string
+  - name: location
+    displayName: "Location"
+    type: string
+    default: "australiaeast"
+  - name: resourceGroup
+    displayName: "Resource Group"
+    type: string
+  - name: deployMode
+    displayName: "Deployment mode"
+    type: string
+    default: 'Validation'
+    values:
+    - Validation
+    - Incremental
+
+
+# For each logic app project
+steps:
+  - ${{ each project in parameters.projectList }}:
+    - task: AzureResourceManagerTemplateDeployment@3
+      displayName: "${{ project }} Deploy mode: ${{ parameters.deployMode }}"
+      inputs:
+        deploymentScope: 'Resource Group'
+        azureResourceManagerConnection: ${{ parameters.serviceConnectionName }}
+        subscriptionId: ${{ parameters.subscriptionId }}
+        action: 'Create Or Update Resource Group'
+        resourceGroupName: ${{ parameters.resourceGroup }}
+        location: ${{ parameters.location }}
+        templateLocation: 'Linked artifact'
+        csmFile: ${{ project }}\LogicApp.json
+        csmParametersFile: ${{ project }}\LogicApp.parameters.json
+        deploymentMode: ${{ variables.deployMode }}   
+          
